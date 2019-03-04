@@ -1,0 +1,236 @@
+<include file="public@header" />
+<style type="text/css">
+	.item{display: block;overflow: hidden;margin-top: 20px;}
+</style>
+</head>
+<body>
+<div class="wrap js-check-wrap">
+	<ul class="nav nav-tabs">
+		<li class="active"><a href="{:url('User/index')}">{:lang('ADMIN_USER_INDEX')}</a></li>
+	</ul>
+	<form class="well form-inline margin-top-20" method="get" autocomplete="off" action="{:url('User/index')}">
+		<label for="keyword">搜索:</label>
+		<input type="text" class="form-control" name="keyword" id="keyword" value="{:input('request.keyword/s','')}" placeholder="请输入用户姓名、手机号">
+		<label for="status">状态:</label>
+		<select name="status" id="status" class="form-control">
+			<option value="">全部</option>
+			<option value="1" <if condition="input('request.status/s','') eq 1">selected</if>>启用</option>
+			<option value="2" <if condition="input('request.status/s','') eq 2">selected</if>>停用</option>
+		</select>
+		<input type="submit" class="btn btn-primary" value="查找" />
+		<button class="btn btn-info" type="button" id="addUser" style="margin-left: 20px;">新增用户</button>
+	</form>
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th>用户姓名</th>
+				<th>手机号</th>
+				<th>注册时间</th>
+				<th>{:lang('STATUS')}</th>
+				<th width="160">{:lang('ACTIONS')}</th>
+			</tr>
+		</thead>
+		<tbody>
+		<empty name="data"><tr><td colspan="5">暂无数据~</td></tr></empty>
+			<php>$user_statuses=array("0"=>"停用","1"=>"启用");</php>
+			<foreach name="users" item="vo">
+			<tr>
+				<td class="nickname">{$vo.user_nickname}</td>
+				<td class="mobile">{$vo.mobile}</td>
+				<td>{$vo.create_time|date="Y-m-d H:i:s",###}</td>
+				<td>
+					<switch name="vo.user_status">
+						<case value="0">
+							<span class="label label-danger">{$user_statuses[$vo['user_status']]}</span>
+						</case>
+						<case value="1">
+							<span class="label label-success">{$user_statuses[$vo['user_status']]}</span>
+						</case>
+					</switch>
+				</td>
+				<td>
+					<if condition="$vo['id'] eq 1 || $vo['id'] eq cmf_get_current_admin_id()">
+						<span class="btn btn-xs btn-primary disabled">{:lang('EDIT')}</span>
+						<span class="btn btn-xs btn-info disabled">重置密码</span>
+						<if condition="$vo['user_status'] eq 1">
+							<span class="btn btn-xs btn-danger disabled">停用</span>
+						<else />
+							<span class="btn btn-xs btn-danger disabled">启用</span>
+						</if>
+					<else />
+						<button type="button" class="btn btn-xs btn-primary edit-user" data-id="{$vo.id}">{:lang('EDIT')}</button>
+						<button type="button" class="btn btn-xs btn-info reset-pass" data-id="{$vo.id}">重置密码</button>
+						<if condition="$vo['user_status'] eq 1">
+							<button type="button" class="btn btn-xs btn-danger status-user" data-id="{$vo.id}">停用</button>
+						<else />
+							<button type="button" class="btn btn-xs btn-danger status-user" data-id="{$vo.id}">启用</button>
+						</if>
+					</if>
+				</td>
+			</tr>
+			</foreach>
+		</tbody>
+	</table>
+	<div class="pagination">{$page}</div>
+</div>
+<script src="__STATIC__/js/admin.js"></script>
+<script src="__STATIC__/js/layer/layer.js"></script>
+<script type="text/javascript">
+	var action_code = 1;
+	//新增用户
+	$("#addUser").on('click',function () {
+	    var htmlInfo = '<div class="form-horizontal"><div class="item">'+
+            '	<label for="input-user_nickname" class="col-sm-3 control-label"><span class="form-required">*</span>用户姓名</label>'+
+            '	<div class="col-md-8 col-sm-10">'+
+            '		<input type="text" class="form-control" id="input-user_nickname" name="user_nickname" maxlength="20" placeholder="请输入用户姓名">'+
+            '	</div>'+
+            '</div>'+
+            '<div class="item">'+
+            '	<label for="input-mobile" class="col-sm-3 control-label"><span class="form-required">*</span>手机号</label>'+
+            '	<div class="col-md-8 col-sm-10">'+
+            '		<input type="text" class="form-control" id="input-mobile" name="mobile" maxlength="11" placeholder="请输入手机号">'+
+            '	</div>'+
+            '</div></div>';
+		layer.open({
+			type: 1,
+			title: '新增用户',
+			area: ['400px','220px'],
+			btn: ['确定','取消'],
+			content: htmlInfo,
+            yes: function(index){
+                var nickname = $("#input-user_nickname").val().trim();
+                var mobile = $("#input-mobile").val().trim();
+                if(nickname === '' || mobile === ''){
+                    layer.msg("请输入用户名和手机号",{time:1500,icon:2});
+                    return false;
+				}
+				if(action_code === 1){
+                    action_code = 0;
+                    $.ajax({
+						type: 'POST',
+						url: "{:url('admin/User/add_post')}",
+						data: {user_nickname:nickname,mobile:mobile},
+						success: function (res) {
+							if(res.code === 1){
+							    layer.close(index);
+							    layer.msg(res.msg,{icon:1,time:1500},function () {
+									location.reload();
+                                })
+							}else{
+                                action_code = 1;
+                                layer.msg(res.msg,{time:1500,icon:2});
+							}
+                        }
+					})
+				}
+            }
+		})
+    });
+	//编辑用户
+	$(".edit-user").on('click',function () {
+        var user_id = $(this).attr('data-id');
+        var the_name = $(this).closest('tr').find('td.nickname').text();
+        var the_mobile = $(this).closest('tr').find('td.mobile').text();
+        var htmlInfo = '<div class="form-horizontal"><div class="item">'+
+            '	<label for="input-user_nickname" class="col-sm-3 control-label"><span class="form-required">*</span>用户姓名</label>'+
+            '	<div class="col-md-8 col-sm-10">'+
+            '		<input type="text" class="form-control" id="input-user_nickname" name="user_nickname" value="'+the_name+'" maxlength="20" placeholder="请输入用户姓名">'+
+            '	</div>'+
+            '</div>'+
+            '<div class="item">'+
+            '	<label for="input-mobile" class="col-sm-3 control-label"><span class="form-required">*</span>手机号</label>'+
+            '	<div class="col-md-8 col-sm-10">'+
+            '		<input type="text" class="form-control" id="input-mobile" name="mobile" value="'+the_mobile+'" maxlength="11" placeholder="请输入手机号">'+
+            '	</div>'+
+            '</div></div>';
+        layer.open({
+            type: 1,
+            title: '编辑用户',
+            area: ['400px','220px'],
+            btn: ['确定','取消'],
+            content: htmlInfo,
+            yes: function(index){
+                var nickname = $("#input-user_nickname").val().trim();
+                var mobile = $("#input-mobile").val().trim();
+                if(nickname === '' || mobile === ''){
+                    layer.msg("请输入用户名和手机号",{time:1500,icon:2});
+                    return false;
+                }
+                if(action_code === 1){
+                    action_code = 0;
+                    $.ajax({
+                        type: 'POST',
+                        url: "{:url('admin/User/edit_post')}",
+                        data: {id:user_id,user_nickname:nickname,mobile:mobile},
+                        success: function (res) {
+                            if(res.code === 1){
+                                layer.close(index);
+                                layer.msg(res.msg,{icon:1,time:1500},function () {
+                                    location.reload();
+                                })
+                            }else{
+                                action_code = 1;
+                                layer.msg(res.msg,{time:1500,icon:2});
+                            }
+                        }
+                    })
+                }
+            }
+        })
+    });
+	//重置密码
+	$(".reset-pass").on('click',function () {
+        var user_id = $(this).attr('data-id');
+        var the_name = $(this).closest('tr').find('td.nickname').text();
+        //询问框
+        layer.confirm('确定要重置 '+the_name+' 的密码吗？', {icon:3,title:'重置密码',btn:['确定','取消']},
+			function () {
+            	$.ajax({
+					type: 'POST',
+					url: "{:url('admin/User/reset_pass')}",
+					data: {id:user_id},
+					success: function (res) {
+						if(res.code === 1){
+                            layer.msg(res.msg,{time:1500,icon:1});
+						}else{
+                            layer.msg(res.msg,{time:1500,icon:2});
+						}
+                    }
+				})
+			},
+			function(index2){
+            	layer.close(index2);
+        	}
+        );
+    });
+    //启用、停用用户
+    $(".status-user").on('click',function () {
+        var user_id = $(this).attr('data-id');
+        var the_name = $(this).closest('tr').find('td.nickname').text();
+        var the_title = $(this).text();
+        //询问框
+        layer.confirm('确定要'+the_title+' '+the_name+' 的账户吗？', {icon:3,title:the_title,btn:['确定','取消']},
+            function () {
+                $.ajax({
+                    type: 'POST',
+                    url: "{:url('admin/User/user_status')}",
+                    data: {id:user_id},
+                    success: function (res) {
+                        if(res.code === 1){
+                            layer.msg(res.msg,{time:1500,icon:1},function () {
+								location.reload();
+                            });
+                        }else{
+                            layer.msg(res.msg,{time:1500,icon:2});
+                        }
+                    }
+                })
+            },
+            function(index2){
+                layer.close(index2);
+            }
+        );
+    })
+</script>
+</body>
+</html>

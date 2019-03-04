@@ -1,0 +1,25 @@
+<include file="public@header" />
+<style type="text/css">
+    .info{width: 100%;height:50px;margin-top: 50px;text-align: center;font-size: 24px;color: rgb(0,111,196)}
+</style>
+</head>
+<body>
+<div class="info">
+    <b>欢迎来到鸿运法后台管理系统！北京时间：<span id="time"></span></b>
+</div>
+<script type="text/javascript">
+    showTime();
+    clearInterval();
+    function showTime(){
+        nowtime=new Date();
+        year=nowtime.getFullYear();
+        month=nowtime.getMonth()+1;
+        date=nowtime.getDate();
+        document.getElementById("time").innerText=year+"年"+month+"月"+date+"日 "+nowtime.toLocaleTimeString();
+    }
+    setInterval(function () {
+        showTime();
+    },1000);
+</script>
+</body>
+</html>

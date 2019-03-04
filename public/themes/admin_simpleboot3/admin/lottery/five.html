@@ -1,0 +1,554 @@
+<include file="public@header" />
+<style type="text/css">
+	.table-bordered td{font-weight: bold;}
+	.hea_item{float: left;margin-right: 30px;}
+	.label_block{display: block;margin-bottom: 12px;}
+	.item{display: inline-block;float: left;overflow: hidden;width: 20%;padding: 12px;}
+	.control-label{text-align: center !important;margin-bottom: 5px !important;}
+	.items{display: inline-block;float: left;overflow: hidden;width: 19%;padding: 12px;}
+	.item_info{overflow: hidden;}
+	.item_div{float: left;width: 50%;}
+	.item_div span{display: block;text-align: center;}
+	.item_div span,.item_div select{margin-bottom: 6px;}
+	.item_left{display: inline-block;float: left;overflow: hidden;width: 5%;height: 138px;position: relative;}
+	.item_left span{position:absolute;bottom: 0;right: 0;}
+	.grey{background-color: rgb(198,197,197);}
+	.green{background-color: rgb(37,155,36);}
+	.blue{background-color: rgb(10,196,247);}
+	.purple{background-color: rgb(235,3,247);}
+	.yellow{background-color: rgb(255,240,0);}
+	.orange{background-color: rgb(255,152,0);}
+	.red{background-color: rgb(229,28,35);}
+	.editRe,.editBs,.editBsa,.editSd,.editSda{cursor: pointer;}
+	.ite{display: block;overflow: hidden;margin-top: 20px;}
+	.ite-label{padding-top: 7px;}
+	.btn_grey{background-color: rgb(230,230,230);cursor: default !important;}
+	.right{color:rgb(229,28,35);}
+	.error{color:rgb(37,155,36);}
+</style>
+</head>
+<body>
+<div class="wrap js-check-wrap">
+	<ul class="nav nav-tabs">
+		<li class="active"><a href="{:url('Lottery/index')}">鸿运法</a></li>
+	</ul>
+	<form class="well js-ajax-form form-inline margin-top-20" method="post" autocomplete="off" style="overflow: hidden;" action="{:url('Lottery/update')}">
+		<div class="hea_item">
+			<label class="label_block">本轮赔率&nbsp;&nbsp;&nbsp;1 : <span>{$lottery.odds}</span></label>
+			<label class="label_block">投注总额&nbsp;&nbsp;&nbsp;<span>{$lottery.betting_money}</span> 分</label>
+			<label class="label_block">当前盈利&nbsp;&nbsp;&nbsp;<span>{$lottery.profit_money}</span> 分</label>
+		</div>
+		<div class="hea_item">
+			<label for="start_amount">起投金额&nbsp;&nbsp;&nbsp;</label>
+			<input type="text" class="form-control" id="start_amount" name="start_amount" placeholder="" value="{$lottery.start_amount}">分
+			<br/><br/><label for="type">当前模式&nbsp;&nbsp;&nbsp;</label>
+			<select name="mode_id" id="type" class="form-control">
+				<foreach name="mode" item="vm">
+					<option value="{$vm.id}" <if condition="$lottery.mode_id eq $vm.id">selected</if>>{$vm.name}</option>
+				</foreach>
+			</select>
+			<input type="hidden" id="lotteryId" name="id" value="{$lottery.id}">
+			<if condition="$lottery.user_id eq cmf_get_current_admin_id()">
+			<button type="submit" style="margin-left: 50px;" class="btn btn-primary js-ajax-submit">保存</button>
+			</if>
+		</div>
+	</form>
+	<if condition="$lottery.user_id eq cmf_get_current_admin_id()">
+	<div style="margin-bottom: 12px;">
+		<switch name="btn_result">
+			<case value="1"><input type="button" class="btn btn-success" id="inputResult" value="输入结果"></case>
+			<default/>
+			<input type="button" class="btn btn_grey" value="输入结果">
+		</switch>
+		<switch name="btn_betting">
+			<case value="1"><input type="button" class="btn btn-info" style="margin-left: 20px;" id="newAction" value="新一轮投注"></case>
+			<default/>
+			<input type="button" class="btn btn_grey" style="margin-left: 20px;" value="新一轮投注">
+		</switch>
+	</div>
+	</if>
+	<table class="table table-hover table-bordered" id="tableInfo">
+		<thead>
+			<tr>
+				<th>序号</th>
+				<th>盈亏</th>
+				<th colspan="3">一位</th>
+				<th colspan="3">二位</th>
+				<th colspan="3">三位</th>
+				<th colspan="3">四位</th>
+				<th colspan="3">五位</th>
+			</tr>
+		</thead>
+		<tbody>
+		<empty name="result"><tr><td colspan="17">暂无数据~</td></tr></empty>
+		<php>$pos=array("0"=>"一","1"=>"二","2"=>"三","3"=>"四","4"=>"五");</php>
+		<foreach name="result" item="vo" key="kv">
+		<tr>
+			<td rowspan="2"><php>echo $count-$kv-1;</php></td>
+			<td rowspan="2">{$vo.profit_loss}</td>
+			<foreach name="vo['lists']" item="vl" key="kvl">
+				<if condition="$vl.value eq ''">
+					<td rowspan="2">{$vl.value}</td>
+					<else/>
+					<td rowspan="2" class="<if condition='$kv eq 0'>editRe</if>" data-name="{$pos[$kvl]}" data-id="{$vo.id}" data-action="{$kvl}" data-var="{$vl.value}">{$vl.value}</td>
+				</if>
+				<empty name="$vl.sd">
+					<td></td>
+					<else/>
+					<td class="<if condition='$kv eq 0'>editSd</if>" data-name="{$pos[$kvl]}" data-id="{$vl.sd.id}" data-var="{$vl['sd']['property']}">{$vl['sd']['name']}</td>
+				</empty>
+				<empty name="$vl.bs">
+					<td></td>
+					<else/>
+					<td class="<if condition='$kv eq 0'>editBs</if>" data-name="{$pos[$kvl]}" data-id="{$vl.bs.id}" data-var="{$vl['bs']['property']}">{$vl['bs']['name']}</td>
+				</empty>
+			</foreach>
+		</tr>
+		<tr>
+			<foreach name="vo['lists']" item="vl" key="kvl">
+				<switch name="vo.genre">
+					<case value="3">
+						<td class="<if condition='$kv eq 0'>editSda</if>" data-name="{$pos[$kvl]}" data-id="{$vl.sd.id}" data-var="{$vl['sd']['property_money']}">
+							{$vl['sd']['profit_loss']}</td>
+						<td class="<if condition='$kv eq 0'>editBsa</if>" data-name="{$pos[$kvl]}" data-id="{$vl.bs.id}" data-var="{$vl['bs']['property_money']}">
+							{$vl['bs']['profit_loss']}</td>
+					</case>
+					<default/>
+					<empty name="$vl.sd">
+						<td></td>
+						<else/>
+						<td class="<if condition='$kv eq 0'>editSda</if> {$vl.sd.color}" data-name="{$pos[$kvl]}" data-id="{$vl.sd.id}" data-var="{$vl['sd']['property_money']}">
+							{$vl['sd']['property_money']}</td>
+					</empty>
+					<empty name="$vl.bs">
+						<td></td>
+						<else/>
+						<td class="<if condition='$kv eq 0'>editBsa</if> {$vl.bs.color}" data-name="{$pos[$kvl]}" data-id="{$vl.bs.id}" data-var="{$vl['bs']['property_money']}">
+							{$vl['bs']['property_money']}</td>
+					</empty>
+				</switch>
+			</foreach>
+		</tr>
+		</foreach>
+		</tbody>
+	</table>
+</div>
+<script src="__STATIC__/js/admin.js"></script>
+<script src="__STATIC__/js/layer/layer.js"></script>
+<script type="text/javascript">
+    var action_code = 1;
+    var lottery_id = $("#lotteryId").val();
+	//输入结果
+	$("#inputResult").on('click',function () {
+        var htmlInfo = '<form class="form-horizontal" id="resultForm"><div class="item">'+
+            '	<div class="control-label">一位</div>'+
+            '	<input type="number" class="form-control" name="one" min="0" max="9">'+
+            '</div><div class="item">'+
+            '	<div class="control-label">二位</div>'+
+            '	<input type="number" class="form-control" name="two" min="0" max="9">'+
+            '</div><div class="item">'+
+            '	<div class="control-label">三位</div>'+
+            '	<input type="number" class="form-control" name="three" min="0" max="9">'+
+            '</div><div class="item">'+
+            '	<div class="control-label">四位</div>'+
+            '	<input type="number" class="form-control" name="four" min="0" max="9">'+
+            '</div><div class="item">'+
+            '	<div class="control-label">五位</div>'+
+            '	<input type="number" class="form-control" name="five" min="0" max="9">'+
+            '</div></form>';
+        layer.open({
+            type: 1,
+            title: '输入结果',
+            area: ['600px','200px'],
+            btn: ['确定','取消'],
+            content: htmlInfo,
+            yes: function(index){
+                var info = $("#resultForm").serializeArray();
+                for(var i=0;i<info.length;i++){
+                    if(info[i]['value'].trim() === ''){
+                        layer.msg("各位数不能为空",{icon:2,time:1500});
+                        return false;
+					}
+					if(info[i]['value'] < 0 || info[i]['value'] > 9){
+                        layer.msg("各位数不能小于0或大于9",{icon:2,time:1500});
+                        return false;
+					}
+				}
+                if(action_code === 1){
+                    action_code = 0;
+                    $.ajax({
+                        type: 'POST',
+                        url: "{:url('admin/Lottery/result_action')}",
+                        data: {lottery_id:lottery_id,info:info},
+                        success: function (res) {
+                            if(res.code === 1){
+                                layer.close(index);
+                                layer.msg(res.msg,{icon:1,time:1500},function () {
+                                    location.reload();
+                                })
+                            }else{
+                                action_code = 1;
+                                layer.msg(res.msg,{time:1500,icon:2});
+                            }
+                        }
+                    })
+                }
+            }
+        })
+    });
+	//新一轮投注
+	$("#newAction").on('click',function () {
+        $.ajax({
+            type: 'POST',
+            url: "{:url('admin/Lottery/new_betting')}",
+            data: {lottery_id:lottery_id},
+            success: function (res) {
+                if(res.code === 1){
+                    showBetting(res.data);
+                }else{
+                    layer.msg(res.msg,{time:1500,icon:2});
+                }
+            }
+        })
+    });
+
+	var positions = ['一位','二位','三位','四位','五位','六位','七位','八位','九位','十位'];
+	var big_small = ['无','小','大'];
+    var single_double = ['无','单','双'];
+	//显示投注结果
+	function showBetting(betting) {
+	    //console.log(betting);
+        var htmlInfo = '<form class="form-horizontal" id="bettingForm"><div class="item_left">' +
+            '	<span>金额</span>' +
+            '</div>';
+        for(var i=0;i<betting.length;i++) {
+            htmlInfo += '<div class="items">' +
+                '	<div class="control-label">'+betting[i]['name']+'位</div>' +
+                '	<div class="item_info">' +
+                '		<div class="item_div">' +
+                '			<span>单双</span>' +
+                '			<select class="form-control" name="sd">';
+            if(betting[i]['sd'] < 2) {
+                htmlInfo += '		<option value="1" selected>单</option>' +
+                    		'		<option value="2">双</option>';
+            }else{
+                htmlInfo += '		<option value="1">单</option>' +
+                    		'		<option value="2" selected>双</option>';
+			}
+                htmlInfo+='	</select>' +
+                '			<input type="number" class="form-control" name="sda" value="' + betting[i]['sda'] + '" min="1">' +
+                '		</div>' +
+                '		<div class="item_div">' +
+                '			<span>大小</span>' +
+                '			<select class="form-control" name="bs">';
+            if(betting[i]['bs'] < 2) {
+                htmlInfo += '		<option value="2">大</option>' +
+                    		'		<option value="1" selected>小</option>';
+            }else{
+                htmlInfo += '		<option value="2" selected>大</option>' +
+                    		'		<option value="1">小</option>';
+			}
+                htmlInfo+='	</select>' +
+                '			<input type="number" class="form-control" name="bsa" value="' + betting[i]['bsa'] + '" min="1">' +
+                '		</div>' +
+                '	</div>' +
+                '</div>';
+        }
+			htmlInfo+='</form>';
+        layer.open({
+            type: 1,
+            title: '新一轮投注',
+            area: ['900px','260px'],
+            btn: ['确定','取消'],
+            content: htmlInfo,
+            yes: function(index){
+                var bettingInfo = $("#bettingForm").serializeArray();
+                for(var j=0;j<bettingInfo.length;j++){
+                    if(bettingInfo[j]['value'] <= 0){
+                        layer.msg("投注金额不能有小于等于0",{icon:2,time:1500});
+                        return false;
+					}
+				}
+                var bettingArray = [];
+				$(".items").each(function (i,event) {
+					bettingArray[i] = {};
+					bettingArray[i]['sd'] = parseInt($(event).find('select[name=sd]').val());
+                    bettingArray[i]['sda'] = parseInt($(event).find('input[name=sda]').val());
+                    bettingArray[i]['bs'] = parseInt($(event).find('select[name=bs]').val());
+                    bettingArray[i]['bsa'] = parseInt($(event).find('input[name=bsa]').val());
+                });
+				//console.log(bettingArray);
+				var stringArray = [];
+				var m = 0;
+				//循环比较找出修改的地方
+				for (var n=0;n<betting.length;n++){
+				    var string = '';
+                    if(betting[n]['sd'] !== bettingArray[n]['sd']){
+                        string = positions[n]+"——单双——"+single_double[betting[n]['sd']]+"-->"+single_double[bettingArray[n]['sd']];
+                        stringArray[m] = string;
+                        m++;
+                    }
+                    if(betting[n]['sda'] !== bettingArray[n]['sda']){
+                        string = positions[n]+"——单双——"+betting[n]['sda']+"-->"+bettingArray[n]['sda'];
+                        stringArray[m] = string;
+                        m++;
+                    }
+				    if(betting[n]['bs'] !== bettingArray[n]['bs']){
+				        string = positions[n]+"——大小——"+big_small[betting[n]['bs']]+"-->"+big_small[bettingArray[n]['bs']];
+                        stringArray[m] = string;
+				        m++;
+					}
+                    if(betting[n]['bsa'] !== bettingArray[n]['bsa']){
+                        string = positions[n]+"——大小——"+betting[n]['bsa']+"-->"+bettingArray[n]['bsa'];
+                        stringArray[m] = string;
+                        m++;
+                    }
+				}
+                if(stringArray.length > 0){
+                    var stringInfo = stringArray.join("<br/>");
+                    layer.confirm("您修改了建议投注：<br/>"+stringInfo+"<br/>确定要进行以上修改吗？", {icon:3,title:"确定修改",btn:['确定','取消']},
+                        function () {
+                            if(action_code === 1) {
+                                action_code = 0;
+                                $.ajax({
+                                    type: 'POST',
+                                    url: "{:url('admin/Lottery/betting_action')}",
+                                    data: {lottery_id: lottery_id, betting: bettingArray},
+                                    success: function (res) {
+                                        if (res.code === 1) {
+                                            layer.close(index);
+                                            layer.msg(res.msg, {icon: 1, time: 1500}, function () {
+                                                location.reload();
+                                            })
+                                        } else {
+                                            action_code = 1;
+                                            layer.msg(res.msg, {time: 1500, icon: 2});
+                                        }
+                                    }
+                                })
+                            }
+                        },
+                        function(index2){
+                            layer.close(index2);
+                        }
+                    );
+                }else {
+                    if(action_code === 1) {
+                        action_code = 0;
+                        $.ajax({
+                            type: 'POST',
+                            url: "{:url('admin/Lottery/betting_action')}",
+                            data: {lottery_id: lottery_id, betting: bettingArray},
+                            success: function (res) {
+                                if (res.code === 1) {
+                                    layer.close(index);
+                                    layer.msg(res.msg, {icon: 1, time: 1500}, function () {
+                                        location.reload();
+                                    })
+                                } else {
+                                    action_code = 1;
+                                    layer.msg(res.msg, {time: 1500, icon: 2});
+                                }
+                            }
+                        })
+                    }
+                }
+            }
+        })
+    }
+    //编辑大小
+	$(".editBs").on('click',function () {
+	    var the_name = $(this).attr('data-name');
+	    var the_id = $(this).attr('data-id');
+	    var the_value = parseInt($(this).attr('data-var'));
+        var htmlInfo = '<div class="form-horizontal"><div class="ite">'+
+            '	<label class="col-sm-4 control-label">当前位数</label>'+
+            '	<div class="col-md-7 col-sm-10">'+
+            '		<label class="ite-label">&nbsp;'+the_name+'位</label>'+
+            '	</div>'+
+            '</div>'+
+            '<div class="ite">'+
+            '	<label class="col-sm-4 control-label">大小</label>'+
+            '	<div class="col-md-7 col-sm-10">'+
+            '		<select name="worth" id="worth" class="form-control">';
+        if(the_value === 2){
+            htmlInfo+='		<option value="2" selected>大</option>' +
+                '			<option value="1">小</option>';
+		}else{
+            htmlInfo+='		<option value="2">大</option>' +
+                '			<option value="1" selected>小</option>';
+		}
+		htmlInfo+=' </select>'+
+            '	</div>'+
+            '</div></div>';
+        layer.open({
+            type: 1,
+            title: '编辑结果',
+            area: ['260px','220px'],
+            btn: ['确定','取消'],
+            content: htmlInfo,
+			yes: function () {
+                var the_value = parseInt($("#worth").val());
+                var this_data = {lottery_id:lottery_id,fid:the_id,value:the_value,type:1};
+                changeSubmit(this_data);
+            }
+        })
+    });
+    //编辑单双
+    $(".editSd").on('click',function () {
+        var the_name = $(this).attr('data-name');
+        var the_id = $(this).attr('data-id');
+        var the_value = parseInt($(this).attr('data-var'));
+        var htmlInfo = '<div class="form-horizontal"><div class="ite">'+
+            '	<label class="col-sm-4 control-label">当前位数</label>'+
+            '	<div class="col-md-7 col-sm-10">'+
+            '		<label class="ite-label">&nbsp;'+the_name+'位</label>'+
+            '	</div>'+
+            '</div>'+
+            '<div class="ite">'+
+            '	<label class="col-sm-4 control-label">单双</label>'+
+            '	<div class="col-md-7 col-sm-10">'+
+            '		<select name="worth" id="worth" class="form-control">';
+        if(the_value === 2){
+            htmlInfo+='	<option value="2" selected>双</option>' +
+                '		<option value="1">单</option>';
+		}else{
+            htmlInfo+='	<option value="2">双</option>' +
+                '		<option value="1" selected>单</option>';
+		}
+		htmlInfo+='	</select>'+
+            '	</div>'+
+            '</div></div>';
+        layer.open({
+            type: 1,
+            title: '编辑结果',
+            area: ['260px','220px'],
+            btn: ['确定','取消'],
+            content: htmlInfo,
+            yes: function () {
+                var the_value = parseInt($("#worth").val());
+                var this_data = {lottery_id:lottery_id,fid:the_id,value:the_value,type:1};
+                changeSubmit(this_data);
+            }
+        })
+    });
+    //编辑大小金额
+    $(".editBsa").on('click',function () {
+        var the_name = $(this).attr('data-name');
+        var the_id = $(this).attr('data-id');
+        var the_value = parseInt($(this).attr('data-var'));
+        var htmlInfo = '<div class="form-horizontal"><div class="ite">'+
+            '	<label class="col-sm-4 control-label">当前位数</label>'+
+            '	<div class="col-md-7 col-sm-10">'+
+            '		<label class="ite-label">&nbsp;'+the_name+'位</label>'+
+            '	</div>'+
+            '</div>'+
+            '<div class="ite">'+
+            '	<label class="col-sm-4 control-label">大小金额</label>'+
+            '	<div class="col-md-7 col-sm-10">' +
+			'		<input type="number" id="worth" value="'+the_value+'" class="form-control" min="1">'+
+            '	</div>'+
+            '</div></div>';
+        layer.open({
+            type: 1,
+            title: '编辑结果',
+            area: ['260px','220px'],
+            btn: ['确定','取消'],
+            content: htmlInfo,
+            yes: function () {
+                var the_value = parseInt($("#worth").val());
+                var this_data = {lottery_id:lottery_id,fid:the_id,value:the_value,type:2};
+                changeSubmit(this_data);
+            }
+        })
+    });
+    //编辑单双金额
+    $(".editSda").on('click',function () {
+        var the_name = $(this).attr('data-name');
+        var the_id = $(this).attr('data-id');
+        var the_value = parseInt($(this).attr('data-var'));
+        var htmlInfo = '<div class="form-horizontal"><div class="ite">'+
+            '	<label class="col-sm-4 control-label">当前位数</label>'+
+            '	<div class="col-md-7 col-sm-10">'+
+            '		<label class="ite-label">&nbsp;'+the_name+'位</label>'+
+            '	</div>'+
+            '</div>'+
+            '<div class="ite">'+
+            '	<label class="col-sm-4 control-label">单双金额</label>'+
+            '	<div class="col-md-7 col-sm-10">' +
+            '		<input type="number" id="worth" value="'+the_value+'" class="form-control" min="1">'+
+            '	</div>'+
+            '</div></div>';
+        layer.open({
+            type: 1,
+            title: '编辑结果',
+            area: ['260px','220px'],
+            btn: ['确定','取消'],
+            content: htmlInfo,
+            yes: function () {
+                var the_value = parseInt($("#worth").val());
+                var this_data = {lottery_id:lottery_id,fid:the_id,value:the_value,type:2};
+                changeSubmit(this_data);
+            }
+        })
+    });
+    //编辑结果
+    $(".editRe").on('click',function () {
+        var the_name = $(this).attr('data-name');
+        var the_id = $(this).attr('data-id');
+        var the_position = $(this).attr('data-action');
+        var the_value = parseInt($(this).attr('data-var'));
+        var htmlInfo = '<div class="form-horizontal"><div class="ite">'+
+            '	<label class="col-sm-4 control-label">当前位数</label>'+
+            '	<div class="col-md-7 col-sm-10">'+
+            '		<label class="ite-label">&nbsp;'+the_name+'位</label>'+
+            '	</div>'+
+            '</div>'+
+            '<div class="ite">'+
+            '	<label class="col-sm-4 control-label">结果数字</label>'+
+            '	<div class="col-md-7 col-sm-10">' +
+            '		<input type="number" id="worth" value="'+the_value+'" class="form-control" min="0" max="9">'+
+            '	</div>'+
+            '</div></div>';
+        layer.open({
+            type: 1,
+            title: '编辑结果',
+            area: ['260px','220px'],
+            btn: ['确定','取消'],
+            content: htmlInfo,
+			yes: function () {
+                var the_value = parseInt($("#worth").val());
+                var value_test = /^[0-9]$/;
+                if(!value_test.test(the_value)){
+                    layer.msg("结果数字必须为0-9的整数",{time:1500,icon:2});
+                    return false;
+				}
+                var this_data = {lottery_id:lottery_id,rid:the_id,value:the_value,position:the_position};
+                changeSubmit(this_data);
+            }
+        })
+    });
+	//提交编辑
+	function changeSubmit(data) {
+	    if(action_code === 1){
+	        action_code = 0;
+	        $.ajax({
+				type: 'POST',
+				url: "{:url('admin/Lottery/change_result')}",
+				data: data,
+				success: function (res) {
+                    if(res.code === 1){
+                        layer.msg(res.msg,{icon:1,time:1500},function () {
+                            location.reload();
+                        })
+                    }else{
+                        action_code = 1;
+                        layer.msg(res.msg,{time:1500,icon:2});
+                    }
+                }
+			})
+		}
+    }
+</script>
+</body>
+</html>

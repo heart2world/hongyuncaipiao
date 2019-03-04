@@ -1,0 +1,97 @@
+<include file="public@header" />
+</head>
+<body>
+<div class="wrap js-check-wrap">
+	<ul class="nav nav-tabs">
+		<li class="active"><a href="{:url('Lottery/index')}">鸿运法</a></li>
+	</ul>
+	<form class="well form-inline margin-top-20" method="get" action="{:url('Lottery/index')}">
+		<label for="type">排序类型:</label>
+		<select name="type" id="type" class="form-control">
+			<option value="1">创建时间</option>
+			<option value="2" <if condition="input('request.type/s','') eq 2">selected</if>>投注总金额</option>
+			<option value="3" <if condition="input('request.type/s','') eq 3">selected</if>>目前亏损</option>
+		</select>
+		<label for="oby">排序方式:</label>
+		<select name="oby" id="oby" class="form-control">
+			<option value="1">倒序</option>
+			<option value="2" <if condition="input('request.oby/s','') eq 2">selected</if>>正序</option>
+		</select>
+		<input type="submit" class="btn btn-primary" value="查询" />
+		<a class="btn btn-info" style="margin-left: 20px;" href="{:url('admin/Lottery/add')}">新增投注</a>
+	</form>
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th>序号</th>
+				<th>投注总金额(分)</th>
+				<th>投注次数</th>
+				<th>目前盈利(分)</th>
+				<th>起投金额(分)</th>
+				<th>赔率</th>
+				<th>投注类型</th>
+				<th>创建时间</th>
+				<th width="160">{:lang('ACTIONS')}</th>
+			</tr>
+		</thead>
+		<tbody>
+		<empty name="data"><tr><td colspan="9">暂无数据~</td></tr></empty>
+			<php>$types=array("1"=>"五","2"=>"十");</php>
+			<foreach name="lottery" item="vo">
+			<tr>
+				<td>{$vo.id}</td>
+				<td>{$vo.betting_money}</td>
+				<td>{$vo.bet_time}</td>
+				<td>{$vo.profit_money}</td>
+				<td>{$vo.start_amount}</td>
+				<td>{$vo.odds}</td>
+				<td>{$types[$vo['type']]}</td>
+				<td>{$vo.create_time|date="Y-m-d H:i:s",###}</td>
+				<td>
+					<if condition="$vo.type eq 1">
+						<a class="btn btn-xs btn-info" href="{:url('Lottery/five',array('id'=>$vo.id))}">查看</a>
+						<else/>
+						<a class="btn btn-xs btn-info" href="{:url('Lottery/ten',array('id'=>$vo.id))}">查看</a>
+					</if>
+					<if condition="$vo.user_id eq cmf_get_current_admin_id()">
+						<button type="button" class="btn btn-xs btn-danger delLottery" data-id="{$vo.id}">删除</button>
+					</if>
+				</td>
+			</tr>
+			</foreach>
+		</tbody>
+	</table>
+	<div class="pagination">{$page}</div>
+</div>
+<script src="__STATIC__/js/admin.js"></script>
+<script src="__STATIC__/js/layer/layer.js"></script>
+<script type="text/javascript">
+    //删除投注信息
+    $(".delLottery").on('click',function () {
+        var the_id = $(this).attr('data-id');
+        //询问框
+        layer.confirm('确定要删除该投注吗？删除后无法恢复', {icon:3,title:"删除投注",btn:['确定','取消']},
+            function () {
+                $.ajax({
+                    type: 'POST',
+                    url: "{:url('admin/Lottery/delete')}",
+                    data: {id:the_id},
+                    success: function (res) {
+                        if(res.code === 1){
+                            layer.msg(res.msg,{time:1500,icon:1},function () {
+								location.reload();
+                            });
+                        }else{
+                            layer.msg(res.msg,{time:1500,icon:2});
+                        }
+                    }
+                })
+            },
+            function(index2){
+                layer.close(index2);
+            }
+        );
+    })
+</script>
+</body>
+</html>

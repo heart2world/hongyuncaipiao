@@ -1,0 +1,54 @@
+<include file="public@header" />
+<style type="text/css">
+	.form-control{width: 25%;display: inline-block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+	<ul class="nav nav-tabs">
+		<li class="active"><a href="{:url('Lottery/index')}">鸿运法</a></li>
+	</ul>
+	<form method="post" class="form-horizontal js-ajax-form margin-top-20" action="{:url('Lottery/add')}">
+		<div class="form-group">
+			<label for="input-start_amount" class="col-sm-2 control-label"><span class="form-required">*</span>起投金额</label>
+			<div class="col-md-6 col-sm-10">
+				<input type="text" class="form-control" id="input-start_amount" name="start_amount" placeholder="请输入起投金额">
+				<span>分</span>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="input-odds" class="col-sm-2 control-label"><span class="form-required">*</span>本轮赔率</label>
+			<div class="col-md-6 col-sm-10">
+				<span>1 : </span>
+				<input type="text" class="form-control" id="input-odds" name="odds" placeholder="">
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="input-type" class="col-sm-2 control-label"><span class="form-required">*</span>投注类型</label>
+			<div class="col-md-6 col-sm-10">
+				<select id="input-type" name="type" class="form-control">
+					<option value="1">五</option>
+					<option value="2">十</option>
+				</select>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="input-mode_id" class="col-sm-2 control-label"><span class="form-required">*</span>初始模式</label>
+			<div class="col-md-6 col-sm-10">
+				<select id="input-mode_id" name="mode_id" class="form-control">
+					<foreach name="mode" item="vm">
+						<option value="{$vm.id}">{$vm.name}</option>
+					</foreach>
+				</select>
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="col-sm-offset-2 col-sm-10">
+				<button type="submit" class="btn btn-primary js-ajax-submit">确定</button>
+			</div>
+		</div>
+	</form>
+</div>
+<script src="__STATIC__/js/admin.js"></script>
+</body>
+</html>
